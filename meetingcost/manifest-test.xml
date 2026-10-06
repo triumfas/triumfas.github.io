@@ -7,9 +7,9 @@
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
   xsi:type="MailApp">
 
-  <Id>7c1e4b2a-5d3f-4a86-9b9e-2f6d8a1c4e93</Id>
-  <Version>1.0.7.1</Version>
-  <ProviderName>TBU2</ProviderName>
+  <Id>7c1e4b2a-5d3f-4a86-9b0e-2f6d8a1c4e93</Id>
+  <Version>1.0.7.0</Version>
+  <ProviderName>TBU</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Meeting Cost2"/>
   <Description DefaultValue="Shows the estimated cost of a meeting while it is being composed. Runs entirely in the client."/>
@@ -73,7 +73,6 @@
                     </Icon>
                     <Action xsi:type="ShowTaskpane">
                       <SourceLocation resid="Taskpane.Url"/>
-                      <SupportsPinning>true</SupportsPinning>
                     </Action>
                   </Control>
                 </Group>
@@ -106,7 +105,7 @@
           <bt:String id="Pane.Label" DefaultValue="Cost panel"/>
         </bt:ShortStrings>
         <bt:LongStrings>
-          <bt:String id="Pane.Tooltip" DefaultValue="Open a side panel with the live cost breakdown. Pin it to keep it open."/>
+          <bt:String id="Pane.Tooltip" DefaultValue="Open a side panel with the live cost breakdown."/>
         </bt:LongStrings>
       </Resources>
     </VersionOverrides>
