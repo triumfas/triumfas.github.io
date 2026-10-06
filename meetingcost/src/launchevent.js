@@ -84,20 +84,50 @@ async function recalc(event) {
       `Estimated meeting cost: ${CURRENCY} ${cost.toLocaleString("en-IE")} ` +
       `(${count} participants, ${Math.round(hours * 100) / 100} h, ${CURRENCY} ${hourlyTotal}/h combined)`;
 
-    await getAsync((cb) =>
-      Office.context.mailbox.item.notificationMessages.replaceAsync(
-        NOTIFICATION_KEY,
-        {
-          type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
-          message,
-          icon: "Icon.16x16",
-          // persistent notifications are rejected on unsaved drafts (error 9028)
-          persistent: false,
-        },
-        cb
-      )
-    );
-    LOG("notification set:", message);
+    const notifications = Office.context.mailbox.item.notificationMessages;
+    try {
+      // Insight banner with a "Details" button that opens the task pane (commandId = ribbon control id in the manifest).
+      await getAsync(
+        (cb) =>
+          notifications.replaceAsync(
+            NOTIFICATION_KEY,
+            {
+              type: Office.MailboxEnums.ItemNotificationMessageType.InsightMessage,
+              message,
+              icon: "Icon.16x16",
+              actions: [
+                {
+                  actionText: "Details",
+                  actionType: Office.MailboxEnums.ActionType.ShowTaskPane,
+                  commandId: "meetingCostPaneButton",
+                  contextData: "{}",
+                },
+              ],
+            },
+            cb
+          ),
+        "insightNotification"
+      );
+      LOG("insight notification set:", message);
+    } catch (insightError) {
+      LOG("insight notification failed, falling back to informational:", describeError(insightError));
+      await getAsync(
+        (cb) =>
+          notifications.replaceAsync(
+            NOTIFICATION_KEY,
+            {
+              type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
+              message,
+              icon: "Icon.16x16",
+              // persistent notifications are rejected on unsaved drafts (error 9028)
+              persistent: false,
+            },
+            cb
+          ),
+        "informationalNotification"
+      );
+      LOG("informational notification set:", message);
+    }
   } catch (error) {
     console.error("[MeetingCost] calculation failed", error);
     try {
