@@ -106,4 +106,22 @@ async function recalc(event) {
   }
 }
 
-Office.actions.associate("recalc", recalc);
+LOG("script loaded, Office:", typeof Office);
+// The browser runtime throws if associate() runs before Office.js has initialised, so retry from onReady.
+// The classic JS-only runtime never fires onReady for handlers, so the direct call must stay.
+let associated = false;
+function associate() {
+  if (associated) return;
+  Office.actions.associate("recalc", recalc);
+  associated = true;
+  LOG("recalc associated");
+}
+try {
+  associate();
+} catch (e) {
+  LOG("early associate failed, waiting for onReady:", describeError(e));
+}
+Office.onReady((info) => {
+  LOG("Office.onReady", info);
+  associate();
+});
