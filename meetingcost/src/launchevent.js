@@ -20,7 +20,7 @@ async function getOrganizerEmail(item) {
   try {
     const organizer = await getAsync((cb) => item.organizer.getAsync(cb));
     return organizer.emailAddress;
-  } catch {
+  } catch (e) {
     return Office.context.mailbox.userProfile.emailAddress;
   }
 }
