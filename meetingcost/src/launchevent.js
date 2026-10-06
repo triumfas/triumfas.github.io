@@ -79,7 +79,8 @@ async function recalc(event) {
           type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
           message,
           icon: "Icon.16x16",
-          persistent: true,
+          // persistent notifications are rejected on unsaved drafts (error 9028)
+          persistent: false,
         },
         cb
       )
