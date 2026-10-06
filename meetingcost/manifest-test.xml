@@ -7,8 +7,8 @@
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
   xsi:type="MailApp">
 
-  <Id>7c1e4b2a-5d3f-4a86-9b0e-2f6d8a1c4e93</Id>
-  <Version>1.0.7.0</Version>
+  <Id>7c1e4b2a-5d3f-4a86-9b9e-2f6d8a1c4e93</Id>
+  <Version>1.0.8.0</Version>
   <ProviderName>TBU</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Meeting Cost2"/>
@@ -28,7 +28,7 @@
   <FormSettings>
     <Form xsi:type="ItemEdit">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://triumfas.github.io/meetingcost/src/commands.html"/>
+        <SourceLocation DefaultValue="https://triumfas.github.io/meetingcost/src/commands-test.html"/>
       </DesktopSettings>
     </Form>
   </FormSettings>
@@ -96,8 +96,8 @@
           <bt:Image id="Icon.80x80" DefaultValue="https://triumfas.github.io/meetingcost/assets/icon-80.png"/>
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="WebViewRuntime.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/commands.html"/>
-          <bt:Url id="JSRuntime.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/launchevent.js"/>
+          <bt:Url id="WebViewRuntime.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/commands-test.html"/>
+          <bt:Url id="JSRuntime.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/launchevent-test.js"/>
           <bt:Url id="Taskpane.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/taskpane.html"/>
         </bt:Urls>
         <bt:ShortStrings>
