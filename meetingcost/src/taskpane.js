@@ -1,10 +1,10 @@
 // Keep in sync with launchevent.js (the event runtime cannot share modules).
 const RATES_BY_SUFFIX = [
-  [".lt", 25],
-  [".com", 30],
-  [".dk", 35],
+  [".lt", 35],
+  [".com", 50],
+  [".dk", 45],
 ];
-const DEFAULT_RATE = 50;
+const DEFAULT_RATE = 30;
 const rateFor = (email) => {
   const e = (email || "").toLowerCase();
   const match = RATES_BY_SUFFIX.find(([suffix]) => e.endsWith(suffix));
