@@ -8,7 +8,7 @@
   xsi:type="MailApp">
 
   <Id>7c1e4b2a-5d3f-4a86-9b0e-2f6d8a1c4e93</Id>
-  <Version>1.0.3.0</Version>
+  <Version>1.0.4.0</Version>
   <ProviderName>Contoso</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Meeting Cost"/>
@@ -75,6 +75,22 @@
                       <FunctionName>recalc</FunctionName>
                     </Action>
                   </Control>
+                  <Control xsi:type="Button" id="meetingCostPaneButton">
+                    <Label resid="Pane.Label"/>
+                    <Supertip>
+                      <Title resid="Pane.Label"/>
+                      <Description resid="Pane.Tooltip"/>
+                    </Supertip>
+                    <Icon>
+                      <bt:Image size="16" resid="Icon.16x16"/>
+                      <bt:Image size="32" resid="Icon.32x32"/>
+                      <bt:Image size="80" resid="Icon.80x80"/>
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                      <SourceLocation resid="Taskpane.Url"/>
+                      <SupportsPinning>true</SupportsPinning>
+                    </Action>
+                  </Control>
                 </Group>
               </OfficeTab>
             </ExtensionPoint>
@@ -98,13 +114,16 @@
         <bt:Urls>
           <bt:Url id="WebViewRuntime.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/commands.html"/>
           <bt:Url id="JSRuntime.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/launchevent.js"/>
+          <bt:Url id="Taskpane.Url" DefaultValue="https://triumfas.github.io/meetingcost/src/taskpane.html"/>
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="Group.Label" DefaultValue="Meeting Cost"/>
           <bt:String id="Button.Label" DefaultValue="Meeting cost"/>
+          <bt:String id="Pane.Label" DefaultValue="Cost panel"/>
         </bt:ShortStrings>
         <bt:LongStrings>
           <bt:String id="Button.Tooltip" DefaultValue="Calculate the estimated cost of this meeting."/>
+          <bt:String id="Pane.Tooltip" DefaultValue="Open a side panel with the live cost breakdown. Pin it to keep it open."/>
         </bt:LongStrings>
       </Resources>
     </VersionOverrides>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meeting Cost</title>
+    <script src="https://officeapis.public.onecdn.static.microsoft/1/office.js"></script>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --card: #f3f6fa;
+        --text: #1b2430;
+        --muted: #5d6b7c;
+        --accent: #0f7b4f;
+        --border: #dde3ea;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1f24;
+          --card: #272b32;
+          --text: #eef1f5;
+          --muted: #9aa6b4;
+          --accent: #4cc38a;
+          --border: #38404a;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+      h1 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
+      .total {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px 16px;
+        text-align: center;
+      }
+      .amount { font-size: 40px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+      .formula { margin-top: 6px; font-size: 13px; color: var(--muted); }
+      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+      .stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 8px; text-align: center; }
+      .stat b { display: block; font-size: 18px; }
+      .stat span { font-size: 11px; color: var(--muted); }
+      h2 { font-size: 13px; margin: 16px 0 6px; }
+      ul { list-style: none; margin: 0; padding: 0; }
+      li { display: flex; justify-content: space-between; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+      li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      li span:last-child { color: var(--muted); flex: none; }
+      .error { color: #c4314b; font-size: 13px; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Meeting cost</h1>
+    <div class="total">
+      <div class="amount" id="amount">&ndash;</div>
+      <div class="formula" id="formula">Calculating&hellip;</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="people">&ndash;</b><span>people</span></div>
+      <div class="stat"><b id="hours">&ndash;</b><span>hours</span></div>
+      <div class="stat"><b id="perPerson">&ndash;</b><span>per person</span></div>
+    </div>
+    <h2>Participants</h2>
+    <ul id="list"></ul>
+    <div class="error" id="error" hidden></div>
+    <script src="taskpane.js"></script>
+  </body>
+</html>
