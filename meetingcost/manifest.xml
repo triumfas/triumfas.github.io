@@ -8,8 +8,8 @@
   xsi:type="MailApp">
 
   <Id>7c1e4b2a-5d3f-4a86-9b0e-2f6d8a1c4e93</Id>
-  <Version>1.0.6.0</Version>
-  <ProviderName>Contoso</ProviderName>
+  <Version>1.0.7.0</Version>
+  <ProviderName>TBU</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Meeting Cost"/>
   <Description DefaultValue="Shows the estimated cost of a meeting while it is being composed. Runs entirely in the client."/>
