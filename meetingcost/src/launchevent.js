@@ -3,22 +3,37 @@ const HOURLY_RATE = 50;
 const CURRENCY = "EUR";
 const NOTIFICATION_KEY = "meetingCost";
 
-function getAsync(fn) {
+const LOG = (...args) => console.log("[MeetingCost]", ...args);
+
+function describeError(e) {
+  if (!e) return "unknown error";
+  return [e.code, e.name, e.message].filter(Boolean).join(": ") || JSON.stringify(e);
+}
+
+// The timeout turns a callback that never fires into a named error instead of a hung command.
+function getAsync(fn, label = "call", timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
-    fn((result) => {
-      if (result.status === Office.AsyncResultStatus.Succeeded) {
-        resolve(result.value);
-      } else {
-        reject(result.error);
-      }
-    });
+    const timer = setTimeout(() => reject(new Error(`${label} timed out`)), timeoutMs);
+    try {
+      fn((result) => {
+        clearTimeout(timer);
+        if (result.status === Office.AsyncResultStatus.Succeeded) {
+          resolve(result.value);
+        } else {
+          reject(result.error);
+        }
+      });
+    } catch (e) {
+      clearTimeout(timer);
+      reject(e);
+    }
   });
 }
 
 // Classic includes the organizer in the attendee lists, web/new Outlook only when editing, so add it explicitly and dedupe.
 async function getOrganizerEmail(item) {
   try {
-    const organizer = await getAsync((cb) => item.organizer.getAsync(cb));
+    const organizer = await getAsync((cb) => item.organizer.getAsync(cb), "organizer");
     return organizer.emailAddress;
   } catch (e) {
     return Office.context.mailbox.userProfile.emailAddress;
@@ -27,11 +42,12 @@ async function getOrganizerEmail(item) {
 
 async function calculateCost() {
   const item = Office.context.mailbox.item;
+  LOG("calculateCost start, itemType:", item && item.itemType);
   const [required, optional, start, end, organizerEmail] = await Promise.all([
-    getAsync((cb) => item.requiredAttendees.getAsync(cb)),
-    getAsync((cb) => item.optionalAttendees.getAsync(cb)),
-    getAsync((cb) => item.start.getAsync(cb)),
-    getAsync((cb) => item.end.getAsync(cb)),
+    getAsync((cb) => item.requiredAttendees.getAsync(cb), "requiredAttendees"),
+    getAsync((cb) => item.optionalAttendees.getAsync(cb), "optionalAttendees"),
+    getAsync((cb) => item.start.getAsync(cb), "start"),
+    getAsync((cb) => item.end.getAsync(cb), "end"),
     getOrganizerEmail(item),
   ]);
 
@@ -42,11 +58,14 @@ async function calculateCost() {
     participants.add(organizerEmail.toLowerCase());
   }
 
+  LOG("inputs", { required: required.length, optional: optional.length, start, end, organizerEmail });
+
   const hours = Math.max(0, (end.getTime() - start.getTime()) / 3600000);
   return { count: participants.size, hours, cost: Math.round(participants.size * hours * HOURLY_RATE) };
 }
 
 async function recalc(event) {
+  LOG("recalc fired");
   try {
     const { count, hours, cost } = await calculateCost();
     const message =
@@ -65,8 +84,23 @@ async function recalc(event) {
         cb
       )
     );
+    LOG("notification set:", message);
   } catch (error) {
-    console.error("Meeting cost calculation failed", error);
+    console.error("[MeetingCost] calculation failed", error);
+    try {
+      await getAsync((cb) =>
+        Office.context.mailbox.item.notificationMessages.replaceAsync(
+          NOTIFICATION_KEY,
+          {
+            type: Office.MailboxEnums.ItemNotificationMessageType.ErrorMessage,
+            message: ("Meeting cost failed: " + describeError(error)).slice(0, 150),
+          },
+          cb
+        )
+      );
+    } catch (e2) {
+      console.error("[MeetingCost] could not show error notification", e2);
+    }
   } finally {
     event.completed();
   }
