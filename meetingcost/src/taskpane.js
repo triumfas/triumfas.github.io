@@ -1,5 +1,15 @@
 // Keep in sync with launchevent.js (the event runtime cannot share modules).
-const HOURLY_RATE = 50;
+const RATES_BY_SUFFIX = [
+  [".lt", 25],
+  [".com", 30],
+  [".dk", 35],
+];
+const DEFAULT_RATE = 50;
+const rateFor = (email) => {
+  const e = (email || "").toLowerCase();
+  const match = RATES_BY_SUFFIX.find(([suffix]) => e.endsWith(suffix));
+  return match ? match[1] : DEFAULT_RATE;
+};
 const CURRENCY = "EUR";
 
 const $ = (id) => document.getElementById(id);
@@ -43,30 +53,31 @@ async function render() {
     const people = new Map();
     const add = (name, email) => {
       const key = (email || name || "").toLowerCase();
-      if (key && !people.has(key)) people.set(key, name || email);
+      if (key && !people.has(key)) people.set(key, { name: name || email, rate: rateFor(email) });
     };
     add(organizer.name, organizer.email);
     [...required, ...optional].forEach((a) => add(a.displayName, a.emailAddress));
 
     const hours = Math.max(0, (end.getTime() - start.getTime()) / 3600000);
-    const perPerson = Math.round(hours * HOURLY_RATE);
-    const total = Math.round(people.size * hours * HOURLY_RATE);
+    const hourlyTotal = [...people.values()].reduce((sum, p) => sum + p.rate, 0);
+    const total = Math.round(hourlyTotal * hours);
+    const average = people.size ? Math.round(total / people.size) : 0;
     const hoursText = Math.round(hours * 100) / 100;
 
     $("amount").textContent = `${CURRENCY} ${fmt(total)}`;
-    $("formula").textContent = `${people.size} people × ${hoursText} h × ${HOURLY_RATE}/h`;
+    $("formula").textContent = `${people.size} people × ${hoursText} h · ${CURRENCY} ${hourlyTotal}/h combined`;
     $("people").textContent = people.size;
     $("hours").textContent = hoursText;
-    $("perPerson").textContent = `${CURRENCY} ${fmt(perPerson)}`;
+    $("perPerson").textContent = `${CURRENCY} ${fmt(average)}`;
 
     const list = $("list");
     list.replaceChildren(
-      ...[...people.values()].map((name) => {
+      ...[...people.values()].map((p) => {
         const li = document.createElement("li");
         const a = document.createElement("span");
-        a.textContent = name;
+        a.textContent = p.name;
         const b = document.createElement("span");
-        b.textContent = `${CURRENCY} ${fmt(perPerson)}`;
+        b.textContent = `${CURRENCY} ${fmt(Math.round(p.rate * hours))} (${p.rate}/h)`;
         li.append(a, b);
         return li;
       })

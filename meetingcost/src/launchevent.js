@@ -1,5 +1,16 @@
 // Single self-contained file: classic Outlook's JS-only runtime does not support imports.
-const HOURLY_RATE = 50;
+// Hourly rate by email domain suffix; anyone else gets DEFAULT_RATE. Keep in sync with taskpane.js.
+const RATES_BY_SUFFIX = [
+  [".lt", 25],
+  [".com", 30],
+  [".dk", 35],
+];
+const DEFAULT_RATE = 50;
+const rateFor = (email) => {
+  const e = (email || "").toLowerCase();
+  const match = RATES_BY_SUFFIX.find(([suffix]) => e.endsWith(suffix));
+  return match ? match[1] : DEFAULT_RATE;
+};
 const CURRENCY = "EUR";
 const NOTIFICATION_KEY = "meetingCost";
 
@@ -61,16 +72,17 @@ async function calculateCost() {
   LOG("inputs", { required: required.length, optional: optional.length, start, end, organizerEmail });
 
   const hours = Math.max(0, (end.getTime() - start.getTime()) / 3600000);
-  return { count: participants.size, hours, cost: Math.round(participants.size * hours * HOURLY_RATE) };
+  const hourlyTotal = [...participants].reduce((sum, email) => sum + rateFor(email), 0);
+  return { count: participants.size, hours, hourlyTotal, cost: Math.round(hourlyTotal * hours) };
 }
 
 async function recalc(event) {
   LOG("recalc fired");
   try {
-    const { count, hours, cost } = await calculateCost();
+    const { count, hours, hourlyTotal, cost } = await calculateCost();
     const message =
       `Estimated meeting cost: ${CURRENCY} ${cost.toLocaleString("en-IE")} ` +
-      `(${count} participants x ${Math.round(hours * 100) / 100} h x ${HOURLY_RATE}/h)`;
+      `(${count} participants, ${Math.round(hours * 100) / 100} h, ${CURRENCY} ${hourlyTotal}/h combined)`;
 
     await getAsync((cb) =>
       Office.context.mailbox.item.notificationMessages.replaceAsync(
