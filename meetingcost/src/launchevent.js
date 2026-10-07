@@ -1,17 +1,29 @@
 // Single self-contained file: classic Outlook's JS-only runtime does not support imports.
-// Hourly rate by email domain suffix; anyone else gets DEFAULT_RATE. Keep in sync with taskpane.js.
-const RATES_BY_SUFFIX = [
-  [".lt", 35],
-  [".com", 50],
-  [".dk", 45],
-];
-const DEFAULT_RATE = 30;
-const rateFor = (email) => {
-  const e = (email || "").toLowerCase();
-  const match = RATES_BY_SUFFIX.find(([suffix]) => e.endsWith(suffix));
-  return match ? match[1] : DEFAULT_RATE;
+// Settings logic is duplicated in taskpane.js (the event runtime cannot share modules); keep in sync.
+const SETTINGS_KEY = "meetingCostSettings";
+const CURRENCIES = ["EUR", "DKK", "USD", "GBP"];
+const DEFAULT_SETTINGS = {
+  currency: "EUR",
+  defaultRate: 30,
+  rules: [
+    { suffix: ".lt", rate: 35 },
+    { suffix: ".com", rate: 50 },
+    { suffix: ".dk", rate: 45 },
+  ],
 };
-const CURRENCY = "EUR";
+function loadSettings() {
+  const s = Office.context.roamingSettings.get(SETTINGS_KEY) || {};
+  return {
+    currency: CURRENCIES.includes(s.currency) ? s.currency : DEFAULT_SETTINGS.currency,
+    defaultRate: Number.isFinite(s.defaultRate) ? s.defaultRate : DEFAULT_SETTINGS.defaultRate,
+    rules: Array.isArray(s.rules) ? s.rules : DEFAULT_SETTINGS.rules,
+  };
+}
+const rateFor = (email, settings) => {
+  const e = (email || "").toLowerCase();
+  const match = settings.rules.find((r) => r.suffix && e.endsWith(r.suffix.toLowerCase()));
+  return match ? match.rate : settings.defaultRate;
+};
 const NOTIFICATION_KEY = "meetingCost";
 
 const LOG = (...args) => console.log("[MeetingCost]", ...args);
@@ -72,17 +84,18 @@ async function calculateCost() {
   LOG("inputs", { required: required.length, optional: optional.length, start, end, organizerEmail });
 
   const hours = Math.max(0, (end.getTime() - start.getTime()) / 3600000);
-  const hourlyTotal = [...participants].reduce((sum, email) => sum + rateFor(email), 0);
-  return { count: participants.size, hours, hourlyTotal, cost: Math.round(hourlyTotal * hours) };
+  const settings = loadSettings();
+  const hourlyTotal = [...participants].reduce((sum, email) => sum + rateFor(email, settings), 0);
+  return { count: participants.size, hours, hourlyTotal, cost: Math.round(hourlyTotal * hours), currency: settings.currency };
 }
 
 async function recalc(event) {
   LOG("recalc fired");
   try {
-    const { count, hours, hourlyTotal, cost } = await calculateCost();
+    const { count, hours, hourlyTotal, cost, currency } = await calculateCost();
     const message =
-      `Estimated meeting cost: ${CURRENCY} ${cost.toLocaleString("en-IE")} ` +
-      `(${count} participants, ${Math.round(hours * 100) / 100} h, ${CURRENCY} ${hourlyTotal}/h combined)`;
+      `Estimated meeting cost: ${currency} ${cost.toLocaleString("en-IE")} ` +
+      `(${count} participants, ${Math.round(hours * 100) / 100} h, ${currency} ${hourlyTotal}/h combined)`;
 
     const notifications = Office.context.mailbox.item.notificationMessages;
     try {

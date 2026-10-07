@@ -52,6 +52,14 @@
       li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       li span:last-child { color: var(--muted); flex: none; }
       .error { color: #c4314b; font-size: 13px; margin-top: 12px; }
+      details { margin-top: 16px; font-size: 13px; }
+      summary { cursor: pointer; font-weight: 600; }
+      .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; }
+      .rule { display: grid; grid-template-columns: 1fr 80px 28px; gap: 6px; margin: 6px 0; }
+      input, select, button { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 5px 6px; min-width: 0; }
+      button { cursor: pointer; }
+      .actions { display: flex; gap: 8px; margin-top: 10px; }
+      #saveStatus { color: var(--muted); margin-top: 6px; }
     </style>
   </head>
   <body>
@@ -68,6 +76,30 @@
     <h2>Participants</h2>
     <ul id="list"></ul>
     <div class="error" id="error" hidden></div>
+    <details>
+      <summary>Settings</summary>
+      <div class="field">
+        <label for="currency">Currency</label>
+        <select id="currency">
+          <option>EUR</option>
+          <option>DKK</option>
+          <option>USD</option>
+          <option>GBP</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="defaultRate">Default rate / h</label>
+        <input id="defaultRate" type="number" min="0" step="any" style="width: 80px" />
+      </div>
+      <h2>Rates by email domain</h2>
+      <div id="rules"></div>
+      <div class="actions">
+        <button type="button" id="addRule">Add domain</button>
+        <button type="button" id="save">Save</button>
+        <button type="button" id="reset">Reset</button>
+      </div>
+      <div id="saveStatus"></div>
+    </details>
     <script src="taskpane.js"></script>
   </body>
 </html>
