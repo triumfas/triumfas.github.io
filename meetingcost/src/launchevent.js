@@ -94,7 +94,7 @@ async function recalc(event) {
   try {
     const { count, hours, hourlyTotal, cost, currency } = await calculateCost();
     const message =
-      `Estimated meeting cost: ${currency} ${cost.toLocaleString("en-IE")} ` +
+      `\u26a0\ufe0f Estimated meeting cost: ${currency} ${cost.toLocaleString("en-IE")} ` +
       `(${count} participants, ${Math.round(hours * 100) / 100} h, ${currency} ${hourlyTotal}/h combined)`;
 
     const notifications = Office.context.mailbox.item.notificationMessages;
