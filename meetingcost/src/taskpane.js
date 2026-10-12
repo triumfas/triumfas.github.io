@@ -23,7 +23,7 @@ const rateFor = (email, settings) => {
   const match = settings.rules.find((r) => r.suffix && e.endsWith(r.suffix.toLowerCase()));
   return match ? match.rate : settings.defaultRate;
 };
-let settings = loadSettings();
+let settings;
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => n.toLocaleString("en-IE");
@@ -166,6 +166,7 @@ function resetSettings() {
 }
 
 Office.onReady(() => {
+  settings = loadSettings();
   const item = Office.context.mailbox.item;
   fillSettingsForm();
   $("addRule").onclick = () => addRuleRow();
