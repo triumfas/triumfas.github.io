@@ -19,8 +19,16 @@ function loadSettings() {
   };
 }
 const rateFor = (email, settings) => {
-  const e = (email || "").toLowerCase();
-  const match = settings.rules.find((r) => r.suffix && e.endsWith(r.suffix.toLowerCase()));
+  const domain = (email || "").trim().toLowerCase().split("@").pop();
+  let match;
+  let longest = 0;
+  settings.rules.forEach((rule) => {
+    const suffix = (rule.suffix || "").trim().toLowerCase().replace(/^\./, "");
+    if (suffix.length > longest && (domain === suffix || domain.endsWith("." + suffix))) {
+      match = rule;
+      longest = suffix.length;
+    }
+  });
   return match ? match.rate : settings.defaultRate;
 };
 const NOTIFICATION_KEY = "meetingCost";

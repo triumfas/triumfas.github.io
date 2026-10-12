@@ -18,8 +18,16 @@ function loadSettings() {
   };
 }
 const rateFor = (email, settings) => {
-  const e = (email || "").toLowerCase();
-  const match = settings.rules.find((r) => r.suffix && e.endsWith(r.suffix.toLowerCase()));
+  const domain = (email || "").trim().toLowerCase().split("@").pop();
+  let match;
+  let longest = 0;
+  settings.rules.forEach((rule) => {
+    const suffix = (rule.suffix || "").trim().toLowerCase().replace(/^\./, "");
+    if (suffix.length > longest && (domain === suffix || domain.endsWith("." + suffix))) {
+      match = rule;
+      longest = suffix.length;
+    }
+  });
   return match ? match.rate : settings.defaultRate;
 };
 let settings;
@@ -54,7 +62,8 @@ async function getOrganizer(item) {
 
 async function render() {
   const item = Office.context.mailbox.item;
-  const CURRENCY = settings.currency;
+  const activeSettings = settings;
+  const CURRENCY = activeSettings.currency;
   try {
     const [required, optional, start, end, organizer] = await Promise.all([
       getAsync((cb) => item.requiredAttendees.getAsync(cb), "requiredAttendees"),
@@ -67,7 +76,7 @@ async function render() {
     const people = new Map();
     const add = (name, email) => {
       const key = (email || name || "").toLowerCase();
-      if (key && !people.has(key)) people.set(key, { name: name || email, rate: rateFor(email, settings) });
+      if (key && !people.has(key)) people.set(key, { name: name || email, rate: rateFor(email, activeSettings) });
     };
     add(organizer.name, organizer.email);
     [...required, ...optional].forEach((a) => add(a.displayName, a.emailAddress));
@@ -97,10 +106,42 @@ async function render() {
       })
     );
     $("error").hidden = true;
+    const message =
+      `\u26a0\ufe0f Estimated meeting cost: ${CURRENCY} ${fmt(total)} ` +
+      `(${people.size} participants, ${hoursText} h, ${CURRENCY} ${hourlyTotal}/h combined)`;
+    try {
+      await updateBanner(item, message);
+    } catch (error) {
+      $("error").textContent = "Could not update meeting banner: " + (error.message || "unknown error");
+      $("error").hidden = false;
+    }
   } catch (error) {
     const e = error || {};
     $("error").textContent = "Could not calculate: " + ([e.code, e.message].filter(Boolean).join(": ") || "unknown error");
     $("error").hidden = false;
+  }
+}
+
+async function updateBanner(item, message) {
+  try {
+    await getAsync((cb) => item.notificationMessages.replaceAsync("meetingCost", {
+      type: Office.MailboxEnums.ItemNotificationMessageType.InsightMessage,
+      message,
+      icon: "Icon.16x16",
+      actions: [{
+        actionText: "Details",
+        actionType: Office.MailboxEnums.ActionType.ShowTaskPane,
+        commandId: "meetingCostPaneButton",
+        contextData: "{}",
+      }],
+    }, cb), "insightNotification");
+  } catch (error) {
+    await getAsync((cb) => item.notificationMessages.replaceAsync("meetingCost", {
+      type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
+      message,
+      icon: "Icon.16x16",
+      persistent: false,
+    }, cb), "informationalNotification");
   }
 }
 
