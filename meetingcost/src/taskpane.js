@@ -23,6 +23,7 @@ const rateFor = (email, settings) => {
   return match ? match.rate : settings.defaultRate;
 };
 let settings;
+let savedRuleValues = new WeakMap();
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => n.toLocaleString("en-IE");
@@ -103,7 +104,26 @@ async function render() {
   }
 }
 
-function addRuleRow(suffix = "", rate = "") {
+function updateUnsavedState() {
+  const currencyChanged = $("currency").value.trim().toUpperCase() !== settings.currency;
+  const rateChanged = $("defaultRate").value.trim() === "" || Number($("defaultRate").value) !== settings.defaultRate;
+  $("currency").classList.toggle("unsaved", currencyChanged);
+  $("defaultRate").classList.toggle("unsaved", rateChanged);
+  const rows = [...document.querySelectorAll("#rules .rule")];
+  let changed = currencyChanged || rateChanged || rows.length !== settings.rules.length;
+  rows.forEach((row) => {
+    const [suffix, rate] = row.querySelectorAll("input");
+    const saved = savedRuleValues.get(row);
+    const suffixChanged = !saved || suffix.value.trim() !== saved.suffix;
+    const ruleRateChanged = !saved || rate.value.trim() === "" || Number(rate.value) !== saved.rate;
+    suffix.classList.toggle("unsaved", suffixChanged);
+    rate.classList.toggle("unsaved", ruleRateChanged);
+    changed = changed || suffixChanged || ruleRateChanged;
+  });
+  $("save").classList.toggle("unsaved", changed);
+}
+
+function addRuleRow(suffix = "", rate = "", savedRule) {
   const row = document.createElement("div");
   row.className = "rule";
   const s = document.createElement("input");
@@ -120,25 +140,35 @@ function addRuleRow(suffix = "", rate = "") {
   x.type = "button";
   x.textContent = "\u00d7";
   x.title = "Remove";
-  x.onclick = () => row.remove();
+  x.onclick = () => {
+    row.remove();
+    updateUnsavedState();
+  };
+  s.oninput = updateUnsavedState;
+  r.oninput = updateUnsavedState;
   row.append(s, r, x);
+  if (savedRule) savedRuleValues.set(row, savedRule);
   $("rules").append(row);
+  updateUnsavedState();
 }
 
-function fillSettingsForm() {
-  $("currency").value = settings.currency;
-  $("defaultRate").value = settings.defaultRate;
+function fillSettingsForm(formSettings = settings) {
+  $("currency").value = formSettings.currency;
+  $("defaultRate").value = formSettings.defaultRate;
+  savedRuleValues = new WeakMap();
   $("rules").replaceChildren();
-  settings.rules.forEach((r) => addRuleRow(r.suffix, r.rate));
+  formSettings.rules.forEach((rule, index) => addRuleRow(rule.suffix, rule.rate, settings.rules[index]));
+  updateUnsavedState();
 }
 
 function saveSettings() {
-  const rules = [...document.querySelectorAll("#rules .rule")]
+  const savedRules = new Map([...document.querySelectorAll("#rules .rule")]
     .map((row) => {
       const [s, r] = row.querySelectorAll("input");
-      return { suffix: s.value.trim(), rate: Number(r.value) };
+      return [row, { suffix: s.value.trim(), rate: Number(r.value) }];
     })
-    .filter((r) => r.suffix && Number.isFinite(r.rate) && r.rate >= 0);
+    .filter(([, rule]) => rule.suffix && Number.isFinite(rule.rate) && rule.rate >= 0));
+  const rules = [...savedRules.values()];
   const defaultRate = Number($("defaultRate").value);
   const status = $("saveStatus");
   const currency = $("currency").value.trim().toUpperCase();
@@ -154,8 +184,10 @@ function saveSettings() {
   Office.context.roamingSettings.set(SETTINGS_KEY, next);
   Office.context.roamingSettings.saveAsync((res) => {
     if (res.status === Office.AsyncResultStatus.Succeeded) {
-      settings = loadSettings();
-      $("currency").value = settings.currency;
+      settings = next;
+      savedRuleValues = new WeakMap(savedRules);
+      if ($("currency").value.trim().toUpperCase() === settings.currency) $("currency").value = settings.currency;
+      updateUnsavedState();
       status.textContent = "Saved.";
       render();
     } else {
@@ -165,8 +197,7 @@ function saveSettings() {
 }
 
 function resetSettings() {
-  settings = { ...DEFAULT_SETTINGS, rules: DEFAULT_SETTINGS.rules.map((r) => ({ ...r })) };
-  fillSettingsForm();
+  fillSettingsForm(DEFAULT_SETTINGS);
   $("saveStatus").textContent = "Defaults restored - press Save to apply.";
 }
 
@@ -174,6 +205,13 @@ Office.onReady(() => {
   settings = loadSettings();
   const item = Office.context.mailbox.item;
   fillSettingsForm();
+  $("currency").oninput = updateUnsavedState;
+  $("defaultRate").oninput = updateUnsavedState;
+  $("currencyPreset").onchange = () => {
+    $("currency").value = $("currencyPreset").value;
+    $("currencyPreset").value = "";
+    updateUnsavedState();
+  };
   $("addRule").onclick = () => addRuleRow();
   $("save").onclick = saveSettings;
   $("reset").onclick = resetSettings;
