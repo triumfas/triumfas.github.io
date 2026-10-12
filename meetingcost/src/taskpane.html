@@ -80,12 +80,13 @@
       <summary>Settings</summary>
       <div class="field">
         <label for="currency">Currency</label>
-        <select id="currency">
-          <option>EUR</option>
-          <option>DKK</option>
-          <option>USD</option>
-          <option>GBP</option>
-        </select>
+        <input id="currency" type="text" list="currencies" autocomplete="off" style="width: 100px" />
+        <datalist id="currencies">
+          <option value="EUR"></option>
+          <option value="DKK"></option>
+          <option value="USD"></option>
+          <option value="GBP"></option>
+        </datalist>
       </div>
       <div class="field">
         <label for="defaultRate">Default rate / h</label>

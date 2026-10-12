@@ -1,6 +1,5 @@
 // Settings logic is duplicated in launchevent.js (the event runtime cannot share modules); keep in sync.
 const SETTINGS_KEY = "meetingCostSettings";
-const CURRENCIES = ["EUR", "DKK", "USD", "GBP"];
 const DEFAULT_SETTINGS = {
   currency: "EUR",
   defaultRate: 30,
@@ -13,7 +12,7 @@ const DEFAULT_SETTINGS = {
 function loadSettings() {
   const s = Office.context.roamingSettings.get(SETTINGS_KEY) || {};
   return {
-    currency: CURRENCIES.includes(s.currency) ? s.currency : DEFAULT_SETTINGS.currency,
+    currency: typeof s.currency === "string" && s.currency.trim() ? s.currency.trim().toUpperCase() : DEFAULT_SETTINGS.currency,
     defaultRate: Number.isFinite(s.defaultRate) ? s.defaultRate : DEFAULT_SETTINGS.defaultRate,
     rules: Array.isArray(s.rules) ? s.rules : DEFAULT_SETTINGS.rules,
   };
@@ -142,15 +141,21 @@ function saveSettings() {
     .filter((r) => r.suffix && Number.isFinite(r.rate) && r.rate >= 0);
   const defaultRate = Number($("defaultRate").value);
   const status = $("saveStatus");
+  const currency = $("currency").value.trim().toUpperCase();
+  if (!currency) {
+    status.textContent = "Enter a currency.";
+    return;
+  }
   if (!Number.isFinite(defaultRate) || defaultRate < 0) {
     status.textContent = "Enter a valid default rate.";
     return;
   }
-  const next = { currency: $("currency").value, defaultRate, rules };
+  const next = { currency, defaultRate, rules };
   Office.context.roamingSettings.set(SETTINGS_KEY, next);
   Office.context.roamingSettings.saveAsync((res) => {
     if (res.status === Office.AsyncResultStatus.Succeeded) {
       settings = loadSettings();
+      $("currency").value = settings.currency;
       status.textContent = "Saved.";
       render();
     } else {
