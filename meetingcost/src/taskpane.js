@@ -1,16 +1,37 @@
-// Keep in sync with launchevent.js (the event runtime cannot share modules).
-const RATES_BY_SUFFIX = [
-  [".lt", 35],
-  [".com", 50],
-  [".dk", 45],
-];
-const DEFAULT_RATE = 30;
-const rateFor = (email) => {
-  const e = (email || "").toLowerCase();
-  const match = RATES_BY_SUFFIX.find(([suffix]) => e.endsWith(suffix));
-  return match ? match[1] : DEFAULT_RATE;
+// Settings logic is duplicated in launchevent.js (the event runtime cannot share modules); keep in sync.
+const SETTINGS_KEY = "meetingCostSettings";
+const DEFAULT_SETTINGS = {
+  currency: "EUR",
+  defaultRate: 30,
+  rules: [
+    { suffix: ".lt", rate: 35 },
+    { suffix: ".com", rate: 50 },
+    { suffix: ".dk", rate: 45 },
+  ],
 };
-const CURRENCY = "EUR";
+function loadSettings() {
+  const s = Office.context.roamingSettings.get(SETTINGS_KEY) || {};
+  return {
+    currency: typeof s.currency === "string" && s.currency.trim() ? s.currency.trim().toUpperCase() : DEFAULT_SETTINGS.currency,
+    defaultRate: Number.isFinite(s.defaultRate) ? s.defaultRate : DEFAULT_SETTINGS.defaultRate,
+    rules: Array.isArray(s.rules) ? s.rules : DEFAULT_SETTINGS.rules,
+  };
+}
+const rateFor = (email, settings) => {
+  const domain = (email || "").trim().toLowerCase().split("@").pop();
+  let match;
+  let longest = 0;
+  settings.rules.forEach((rule) => {
+    const suffix = (rule.suffix || "").trim().toLowerCase().replace(/^\./, "");
+    if (suffix.length > longest && (domain === suffix || domain.endsWith("." + suffix))) {
+      match = rule;
+      longest = suffix.length;
+    }
+  });
+  return match ? match.rate : settings.defaultRate;
+};
+let settings;
+let savedRuleValues = new WeakMap();
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => n.toLocaleString("en-IE");
@@ -41,6 +62,8 @@ async function getOrganizer(item) {
 
 async function render() {
   const item = Office.context.mailbox.item;
+  const activeSettings = settings;
+  const CURRENCY = activeSettings.currency;
   try {
     const [required, optional, start, end, organizer] = await Promise.all([
       getAsync((cb) => item.requiredAttendees.getAsync(cb), "requiredAttendees"),
@@ -53,7 +76,7 @@ async function render() {
     const people = new Map();
     const add = (name, email) => {
       const key = (email || name || "").toLowerCase();
-      if (key && !people.has(key)) people.set(key, { name: name || email, rate: rateFor(email) });
+      if (key && !people.has(key)) people.set(key, { name: name || email, rate: rateFor(email, activeSettings) });
     };
     add(organizer.name, organizer.email);
     [...required, ...optional].forEach((a) => add(a.displayName, a.emailAddress));
@@ -83,6 +106,15 @@ async function render() {
       })
     );
     $("error").hidden = true;
+    const message =
+      `\u26a0\ufe0f Estimated meeting cost: ${CURRENCY} ${fmt(total)} ` +
+      `(${people.size} participants, ${hoursText} h, ${CURRENCY} ${hourlyTotal}/h combined)`;
+    try {
+      await updateBanner(item, message);
+    } catch (error) {
+      $("error").textContent = "Could not update meeting banner: " + (error.message || "unknown error");
+      $("error").hidden = false;
+    }
   } catch (error) {
     const e = error || {};
     $("error").textContent = "Could not calculate: " + ([e.code, e.message].filter(Boolean).join(": ") || "unknown error");
@@ -90,8 +122,140 @@ async function render() {
   }
 }
 
+async function updateBanner(item, message) {
+  try {
+    await getAsync((cb) => item.notificationMessages.replaceAsync("meetingCost", {
+      type: Office.MailboxEnums.ItemNotificationMessageType.InsightMessage,
+      message,
+      icon: "Icon.16x16",
+      actions: [{
+        actionText: "Details",
+        actionType: Office.MailboxEnums.ActionType.ShowTaskPane,
+        commandId: "meetingCostPaneButton",
+        contextData: "{}",
+      }],
+    }, cb), "insightNotification");
+  } catch (error) {
+    await getAsync((cb) => item.notificationMessages.replaceAsync("meetingCost", {
+      type: Office.MailboxEnums.ItemNotificationMessageType.InformationalMessage,
+      message,
+      icon: "Icon.16x16",
+      persistent: false,
+    }, cb), "informationalNotification");
+  }
+}
+
+function updateUnsavedState() {
+  const currencyChanged = $("currency").value.trim().toUpperCase() !== settings.currency;
+  const rateChanged = $("defaultRate").value.trim() === "" || Number($("defaultRate").value) !== settings.defaultRate;
+  $("currency").classList.toggle("unsaved", currencyChanged);
+  $("defaultRate").classList.toggle("unsaved", rateChanged);
+  const rows = [...document.querySelectorAll("#rules .rule")];
+  let changed = currencyChanged || rateChanged || rows.length !== settings.rules.length;
+  rows.forEach((row) => {
+    const [suffix, rate] = row.querySelectorAll("input");
+    const saved = savedRuleValues.get(row);
+    const suffixChanged = !saved || suffix.value.trim() !== saved.suffix;
+    const ruleRateChanged = !saved || rate.value.trim() === "" || Number(rate.value) !== saved.rate;
+    suffix.classList.toggle("unsaved", suffixChanged);
+    rate.classList.toggle("unsaved", ruleRateChanged);
+    changed = changed || suffixChanged || ruleRateChanged;
+  });
+  $("save").classList.toggle("unsaved", changed);
+}
+
+function addRuleRow(suffix = "", rate = "", savedRule) {
+  const row = document.createElement("div");
+  row.className = "rule";
+  const s = document.createElement("input");
+  s.type = "text";
+  s.placeholder = ".example.com";
+  s.value = suffix;
+  const r = document.createElement("input");
+  r.type = "number";
+  r.min = "0";
+  r.step = "any";
+  r.placeholder = "rate/h";
+  r.value = rate;
+  const x = document.createElement("button");
+  x.type = "button";
+  x.textContent = "\u00d7";
+  x.title = "Remove";
+  x.onclick = () => {
+    row.remove();
+    updateUnsavedState();
+  };
+  s.oninput = updateUnsavedState;
+  r.oninput = updateUnsavedState;
+  row.append(s, r, x);
+  if (savedRule) savedRuleValues.set(row, savedRule);
+  $("rules").append(row);
+  updateUnsavedState();
+}
+
+function fillSettingsForm(formSettings = settings) {
+  $("currency").value = formSettings.currency;
+  $("defaultRate").value = formSettings.defaultRate;
+  savedRuleValues = new WeakMap();
+  $("rules").replaceChildren();
+  formSettings.rules.forEach((rule, index) => addRuleRow(rule.suffix, rule.rate, settings.rules[index]));
+  updateUnsavedState();
+}
+
+function saveSettings() {
+  const savedRules = new Map([...document.querySelectorAll("#rules .rule")]
+    .map((row) => {
+      const [s, r] = row.querySelectorAll("input");
+      return [row, { suffix: s.value.trim(), rate: Number(r.value) }];
+    })
+    .filter(([, rule]) => rule.suffix && Number.isFinite(rule.rate) && rule.rate >= 0));
+  const rules = [...savedRules.values()];
+  const defaultRate = Number($("defaultRate").value);
+  const status = $("saveStatus");
+  const currency = $("currency").value.trim().toUpperCase();
+  if (!currency) {
+    status.textContent = "Enter a currency.";
+    return;
+  }
+  if (!Number.isFinite(defaultRate) || defaultRate < 0) {
+    status.textContent = "Enter a valid default rate.";
+    return;
+  }
+  const next = { currency, defaultRate, rules };
+  Office.context.roamingSettings.set(SETTINGS_KEY, next);
+  Office.context.roamingSettings.saveAsync((res) => {
+    if (res.status === Office.AsyncResultStatus.Succeeded) {
+      settings = next;
+      savedRuleValues = new WeakMap(savedRules);
+      if ($("currency").value.trim().toUpperCase() === settings.currency) $("currency").value = settings.currency;
+      updateUnsavedState();
+      status.textContent = "Saved.";
+      render();
+    } else {
+      status.textContent = "Save failed: " + (res.error && res.error.message);
+    }
+  });
+}
+
+function resetSettings() {
+  fillSettingsForm(DEFAULT_SETTINGS);
+  $("saveStatus").textContent = "Defaults restored - press Save to apply.";
+}
+
 Office.onReady(() => {
+  settings = loadSettings();
   const item = Office.context.mailbox.item;
+  fillSettingsForm();
+  $("currency").oninput = updateUnsavedState;
+  $("defaultRate").oninput = updateUnsavedState;
+  $("currencyPreset").onchange = () => {
+    $("currency").value = $("currencyPreset").value;
+    $("currencyPreset").value = "";
+    updateUnsavedState();
+  };
+  $("addRule").onclick = () => addRuleRow();
+  $("save").onclick = saveSettings;
+  $("reset").onclick = resetSettings;
   render();
   // Live updates while the pane stays open.
   item.addHandlerAsync(Office.EventType.RecipientsChanged, render);
