@@ -46,7 +46,10 @@ async function getRoomIdentities(item) {
   }
   return { emails, names };
 }
-const isRoom = (a, rooms) => rooms.emails.has(norm(a.emailAddress)) || rooms.names.has(norm(a.displayName));
+// Room mailboxes are named like "103 name [50]/name": "[capacity]/CC-Site".
+const ROOM_NAME_PATTERN = /\[\d+\]\s*\/\s*[A-Za-z]{2}-/;
+const isRoom = (a, rooms) =>
+  rooms.emails.has(norm(a.emailAddress)) || rooms.names.has(norm(a.displayName)) || ROOM_NAME_PATTERN.test(a.displayName || "");
 
 async function getOrganizer(item) {
   try {
