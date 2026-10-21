@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Permissions – A9</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav>
+<a href="index.html">Home</a>
+<a href="privacy.html">Privacy Policy</a>
+<a href="permissions.html">Permissions</a>
+<a href="terms.html">Terms of Service</a>
+</nav></header>
+<main>
+<h1>Permissions explained</h1>
+<p class="meta">A9 (package <code>lt.tbu.a9</code>) · Last updated: 2026-10-13</p>
+<p>A9 asks only for permissions it needs for its features. It has <strong>no internet permission</strong>, so none of the data below can leave your device. See the <a href="privacy.html">Privacy Policy</a>.</p>
+
+<h2>Always declared</h2>
+<h3><code>QUERY_ALL_PACKAGES</code> – see all installed apps</h3>
+<p>A9’s core and only purpose is <strong>device search</strong>: finding and launching any app installed on the device from a T9 keypad. The search needs the complete list of installed apps. Without this permission Android hides most apps from A9, and search would find only a small fraction of them (we tested this on a real device). The list is used only on the device to search and launch apps; it is never transmitted.</p>
+
+<h3><code>REQUEST_DELETE_PACKAGES</code> – uninstall dialog</h3>
+<p>Used only when you choose <em>Uninstall</em> in an app’s long-press menu. Android then shows its own confirmation dialog; A9 never uninstalls anything without it.</p>
+
+<h3><code>RECEIVE_BOOT_COMPLETED</code> – restore the Quick Launch notification</h3>
+<p>Used only to bring back the optional Quick Launch notification after the device restarts, if you enabled it.</p>
+
+<h2>Optional – only if you enable the feature</h2>
+<h3><code>READ_CONTACTS</code> – contact search</h3>
+<p>Used only if you turn on <em>Contacts</em> in settings, so you can search contacts by name or number, and call, message or open them. Contacts are used only in memory on the device and are not transmitted.</p>
+
+<h3><code>PACKAGE_USAGE_STATS</code> (Usage access) – recently used apps</h3>
+<p>Used only if you turn on <em>Recently used apps</em> and grant Usage access in Android settings. A9 reads which apps were recently opened, to show them first. This data stays on the device.</p>
+
+<h3><code>POST_NOTIFICATIONS</code> – Quick Launch notification</h3>
+<p>Used only if you turn on <em>Quick Launch Panel</em>, to show a notification with your most-used apps.</p>
+
+<p>Calling a contact opens the system dialer with the number filled in; A9 does not request the permission to place calls itself.</p>
+
+<p>Questions: <a href="mailto:A9@tbu.lt">A9@tbu.lt</a></p>
+</main>
+<footer>© 2026 · A9 · <a href="mailto:A9@tbu.lt">A9@tbu.lt</a></footer>
+</body>
+</html>
