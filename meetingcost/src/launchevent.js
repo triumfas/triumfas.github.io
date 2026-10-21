@@ -1,36 +1,33 @@
 // Single self-contained file: classic Outlook's JS-only runtime does not support imports.
 // Settings logic is duplicated in taskpane.js (the event runtime cannot share modules); keep in sync.
 const SETTINGS_KEY = "meetingCostSettings";
-const DEFAULT_SETTINGS = {
-  currency: "EUR",
-  defaultRate: 30,
-  rules: [
-    { suffix: ".lt", rate: 35 },
-    { suffix: ".com", rate: 50 },
-    { suffix: ".dk", rate: 45 },
-  ],
-};
+const CURRENCY = "DKK";
+const HOURLY_RATE = 400;
+const DEFAULT_SETTINGS = { includeOptional: false };
 function loadSettings() {
   const s = Office.context.roamingSettings.get(SETTINGS_KEY) || {};
-  return {
-    currency: typeof s.currency === "string" && s.currency.trim() ? s.currency.trim().toUpperCase() : DEFAULT_SETTINGS.currency,
-    defaultRate: Number.isFinite(s.defaultRate) ? s.defaultRate : DEFAULT_SETTINGS.defaultRate,
-    rules: Array.isArray(s.rules) ? s.rules : DEFAULT_SETTINGS.rules,
-  };
+  return { includeOptional: typeof s.includeOptional === "boolean" ? s.includeOptional : DEFAULT_SETTINGS.includeOptional };
 }
-const rateFor = (email, settings) => {
-  const domain = (email || "").trim().toLowerCase().split("@").pop();
-  let match;
-  let longest = 0;
-  settings.rules.forEach((rule) => {
-    const suffix = (rule.suffix || "").trim().toLowerCase().replace(/^\./, "");
-    if (suffix.length > longest && (domain === suffix || domain.endsWith("." + suffix))) {
-      match = rule;
-      longest = suffix.length;
-    }
-  });
-  return match ? match.rate : settings.defaultRate;
-};
+const norm = (v) => (v || "").trim().toLowerCase();
+
+// Rooms are recognised via the meeting's structured location (rooms picked in Room Finder / Teams rooms are Room-type locations).
+async function getRoomIdentities(item) {
+  const emails = new Set();
+  const names = new Set();
+  try {
+    const locations = await getAsync((cb) => item.enhancedLocation.getAsync(cb), "enhancedLocation");
+    (locations || []).forEach((l) => {
+      if (l.locationIdentifier && l.locationIdentifier.type === Office.MailboxEnums.LocationType.Room) {
+        if (l.emailAddress) emails.add(norm(l.emailAddress));
+        if (l.displayName) names.add(norm(l.displayName));
+      }
+    });
+  } catch (e) {
+    LOG("enhancedLocation unavailable:", describeError(e));
+  }
+  return { emails, names };
+}
+const isRoom = (a, rooms) => rooms.emails.has(norm(a.emailAddress)) || rooms.names.has(norm(a.displayName));
 const NOTIFICATION_KEY = "meetingCost";
 
 const LOG = (...args) => console.log("[MeetingCost]", ...args);
@@ -73,27 +70,28 @@ async function getOrganizerEmail(item) {
 async function calculateCost() {
   const item = Office.context.mailbox.item;
   LOG("calculateCost start, itemType:", item && item.itemType);
-  const [required, optional, start, end, organizerEmail] = await Promise.all([
+  const [required, optional, start, end, organizerEmail, rooms] = await Promise.all([
     getAsync((cb) => item.requiredAttendees.getAsync(cb), "requiredAttendees"),
     getAsync((cb) => item.optionalAttendees.getAsync(cb), "optionalAttendees"),
     getAsync((cb) => item.start.getAsync(cb), "start"),
     getAsync((cb) => item.end.getAsync(cb), "end"),
     getOrganizerEmail(item),
+    getRoomIdentities(item),
   ]);
 
-  const participants = new Set(
-    [...required, ...optional].map((a) => a.emailAddress.toLowerCase())
-  );
+  const settings = loadSettings();
+  const people = [...required, ...(settings.includeOptional ? optional : [])].filter((a) => !isRoom(a, rooms));
+  const participants = new Set(people.map((a) => norm(a.emailAddress)));
   if (organizerEmail) {
-    participants.add(organizerEmail.toLowerCase());
+    participants.add(norm(organizerEmail));
   }
+  rooms.emails.forEach((e) => participants.delete(e));
 
-  LOG("inputs", { required: required.length, optional: optional.length, start, end, organizerEmail });
+  LOG("inputs", { required: required.length, optional: optional.length, rooms: rooms.emails.size, start, end, organizerEmail });
 
   const hours = Math.max(0, (end.getTime() - start.getTime()) / 3600000);
-  const settings = loadSettings();
-  const hourlyTotal = [...participants].reduce((sum, email) => sum + rateFor(email, settings), 0);
-  return { count: participants.size, hours, hourlyTotal, cost: Math.round(hourlyTotal * hours), currency: settings.currency };
+  const hourlyTotal = participants.size * HOURLY_RATE;
+  return { count: participants.size, hours, hourlyTotal, cost: Math.round(hourlyTotal * hours), currency: CURRENCY };
 }
 
 async function recalc(event) {
