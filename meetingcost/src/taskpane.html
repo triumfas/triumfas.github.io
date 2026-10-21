@@ -30,6 +30,9 @@
       body {
         margin: 0;
         padding: 16px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
         background: var(--bg);
         color: var(--text);
         font-family: "Segoe UI", system-ui, sans-serif;
@@ -62,7 +65,7 @@
       .unsaved { border-color: var(--unsaved); box-shadow: inset 0 0 0 1px var(--unsaved); }
       .actions { display: flex; gap: 8px; margin-top: 10px; }
       #saveStatus { color: var(--muted); margin-top: 6px; }
-      .footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border); text-align: center; }
+      .footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); text-align: center; }
       button:disabled { cursor: not-allowed; opacity: .6; }
     </style>
   </head>
@@ -95,6 +98,6 @@
     <div class="footer">
       <button type="button" id="feedback">Feedback</button>
     </div>
-    <script src="taskpane.js?v=20261021-2"></script>
+    <script src="taskpane.js?v=20261021-3"></script>
   </body>
 </html>
