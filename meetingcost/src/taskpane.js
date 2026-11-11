@@ -92,7 +92,7 @@ async function render() {
     $("amount").textContent = `${CURRENCY} ${fmt(total)}`;
     $("people").textContent = people.size;
     $("hours").textContent = `${hoursText}h`;
-    $("totalDetail").textContent = `(${plural(people.size, "attendee")} x ${hoursText} ${hoursText === 1 ? "hour" : "h"})`;
+    $("totalDetail").textContent = `${plural(people.size, "attendee")} x ${plural(hoursText, "hour")} x ${CURRENCY} ${fmt(HOURLY_RATE)}/hour`;
     $("totalValue").textContent = `${CURRENCY} ${fmt(total)}`;
 
     const list = $("list");

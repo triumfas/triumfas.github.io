@@ -85,10 +85,9 @@
       li .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       li .rate { flex: none; white-space: nowrap; }
       li .rate small { font-size: 14px; color: var(--muted); }
-      .totals { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 8px; font-weight: 600; }
-      .totals > span:first-child { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .totals > span:last-child { flex: none; white-space: nowrap; }
-      .totals .detail { margin-left: 4px; font-weight: 400; color: var(--muted); }
+      .totals { padding-top: 8px; }
+      .totals .sum { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+      .totals .detail { margin-top: 2px; font-size: 14px; color: var(--muted); }
       .error { color: var(--error); font-size: 14px; }
       details { font-size: 14px; }
       summary { cursor: pointer; font-weight: 600; }
@@ -135,8 +134,8 @@
       <div>
         <ul id="list"></ul>
         <div class="totals">
-          <span><span>Total</span><span class="detail" id="totalDetail"></span></span>
-          <span id="totalValue">&ndash;</span>
+          <div class="sum"><span>Total</span><span id="totalValue">&ndash;</span></div>
+          <div class="detail" id="totalDetail"></div>
         </div>
       </div>
       <div class="error" id="error" hidden></div>
