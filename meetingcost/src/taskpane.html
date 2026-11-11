@@ -85,9 +85,9 @@
       li .rate { flex: none; white-space: nowrap; }
       li .rate small { font-size: 14px; color: var(--muted); }
       .totals { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding-top: 8px; font-weight: 600; }
-      .totals > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+      .totals > span:first-child { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .totals > span:last-child { flex: none; white-space: nowrap; }
-      .totals .detail { font-weight: 400; font-size: 14px; color: var(--muted); }
+      .totals .detail { margin-left: 4px; font-weight: 400; color: var(--muted); }
       .error { color: var(--error); font-size: 14px; }
       details { font-size: 14px; }
       summary { cursor: pointer; font-weight: 600; }
@@ -159,6 +159,6 @@
       </div>
       <i aria-hidden="true"></i>
     </div>
-    <script src="taskpane.js?v=20261111-1"></script>
+    <script src="taskpane.js?v=20261111-2"></script>
   </body>
 </html>
