@@ -7,97 +7,156 @@
     <script src="https://officeapis.public.onecdn.static.microsoft/1/office.js"></script>
     <style>
       :root {
-        --bg: #ffffff;
-        --card: #f3f6fa;
-        --text: #1b2430;
-        --muted: #5d6b7c;
-        --accent: #0f7b4f;
-        --border: #dde3ea;
+        --page: #f6f6f4;
+        --card: #ffffff;
+        --card-border: rgba(0, 35, 70, 0.08);
+        --surface: rgba(237, 237, 233, 0.5);
+        --surface-subtle: rgba(237, 237, 233, 0.5);
+        --text: #002346;
+        --amount: #000000;
+        --muted: rgba(0, 35, 70, 0.64);
+        --row-border: rgba(0, 35, 70, 0.16);
+        --link: #0060e8;
         --unsaved: #c75b00;
+        --error: #c4314b;
+        --input-bg: #ffffff;
+        --input-border: rgba(0, 35, 70, 0.32);
+        --feedback-icon: url("../assets/feedback-light.svg");
+        --logo: url("../assets/danske-logo-light.svg");
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #1c1f24;
-          --card: #272b32;
-          --text: #eef1f5;
-          --muted: #9aa6b4;
-          --accent: #4cc38a;
-          --border: #38404a;
+          --page: #ededeb;
+          --card: #303030;
+          --card-border: rgba(255, 255, 255, 0.16);
+          --surface: #404040;
+          --surface-subtle: #303030;
+          --text: #ffffff;
+          --amount: #ffffff;
+          --muted: #ffffff;
+          --row-border: rgba(255, 255, 255, 0.16);
+          --link: #0060e8;
           --unsaved: #ff9b42;
+          --error: #ff8fa3;
+          --input-bg: #404040;
+          --input-border: rgba(255, 255, 255, 0.32);
+          --feedback-icon: url("../assets/feedback-dark.svg");
         }
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        padding: 16px;
+        padding: 0 24px 24px;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        background: var(--bg);
+        gap: 20px;
+        background: var(--page);
         color: var(--text);
         font-family: "Segoe UI", system-ui, sans-serif;
+        font-size: 16px;
       }
-      h1 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
-      .total {
+      .brand { height: 18px; margin-top: 24px; display: flex; align-items: center; justify-content: space-between; }
+      .brand i { display: block; width: 118px; height: 12px; background: var(--logo) no-repeat left center / contain; }
+      .brand img { display: block; width: 77px; height: 18px; }
+      .card {
         background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 18px 16px;
-        text-align: center;
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+        padding: 20px 20px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
       }
-      .amount { font-size: 40px; font-weight: 700; color: var(--accent); line-height: 1.1; }
-      .formula { margin-top: 6px; font-size: 13px; color: var(--muted); }
-      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
-      .stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 8px; text-align: center; }
-      .stat b { display: block; font-size: 18px; }
-      .stat span { font-size: 11px; color: var(--muted); }
-      h2 { font-size: 13px; margin: 16px 0 6px; }
+      .title { display: flex; align-items: center; gap: 6px; margin: 0 0 16px; font-size: 18px; font-weight: 600; color: var(--amount); }
+      .title img { width: 24px; height: 24px; }
+      .head { display: flex; flex-direction: column; }
+      .total { background: var(--surface); border-radius: 6px; padding: 20px 8px; text-align: center; font-weight: 600; }
+      .total .label { font-size: 16px; color: var(--muted); }
+      .amount { margin-top: 6px; font-size: 48px; line-height: normal; color: var(--amount); }
+      .stats { display: flex; gap: 12px; }
+      .stat { flex: 1 1 0; min-width: 0; background: var(--surface); border-radius: 6px; padding: 12px; font-weight: 600; }
+      .stat span { display: block; font-size: 16px; color: var(--muted); }
+      .stat b { display: block; margin-top: 4px; font-size: 18px; font-weight: 600; color: var(--text); }
       ul { list-style: none; margin: 0; padding: 0; }
-      li { display: flex; justify-content: space-between; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-      li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      li span:last-child { color: var(--muted); flex: none; }
-      .error { color: #c4314b; font-size: 13px; margin-top: 12px; }
-      details { margin-top: 16px; font-size: 13px; }
+      li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--row-border); font-size: 16px; }
+      li:first-child:not(:last-child) { border-bottom-color: var(--card-border); }
+      li .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      li .rate { flex: none; white-space: nowrap; }
+      li .rate small { font-size: 14px; color: var(--muted); }
+      .totals { display: flex; justify-content: space-between; gap: 8px; padding-top: 8px; font-weight: 600; }
+      .totals .detail { font-weight: 400; color: var(--muted); }
+      .error { color: var(--error); font-size: 14px; }
+      details { font-size: 14px; }
       summary { cursor: pointer; font-weight: 600; }
       .field { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; }
-      input, select, button { font: inherit; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 5px 6px; min-width: 0; }
+      input, button { font: inherit; color: var(--text); background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 6px; padding: 5px 10px; min-width: 0; }
+      input[type="checkbox"] { padding: 0; accent-color: var(--link); }
       button { cursor: pointer; }
+      button:disabled { cursor: not-allowed; opacity: .6; }
       .unsaved { border-color: var(--unsaved); box-shadow: inset 0 0 0 1px var(--unsaved); }
       .actions { display: flex; gap: 8px; margin-top: 10px; }
       #saveStatus { color: var(--muted); margin-top: 6px; }
-      .footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); text-align: center; }
-      button:disabled { cursor: not-allowed; opacity: .6; }
+      .feedback {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px;
+        background: var(--surface-subtle);
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+      }
+      .feedback > div { flex: 1 1 0; min-width: 0; }
+      .feedback h3 { margin: 0 0 12px; font-size: 18px; font-weight: 600; }
+      .feedback p { margin: 0; color: var(--muted); }
+      .feedback .link { padding: 0; border: 0; background: none; color: var(--link); text-decoration: underline; font-size: 16px; }
+      .feedback .link:disabled { color: var(--muted); text-decoration: none; }
+      .feedback i { flex: none; width: 60px; height: 60px; background: var(--feedback-icon) no-repeat center / contain; }
     </style>
   </head>
   <body>
-    <h1>Meeting cost</h1>
-    <div class="total">
-      <div class="amount" id="amount">&ndash;</div>
-      <div class="formula" id="formula">Calculating&hellip;</div>
-    </div>
-    <div class="stats">
-      <div class="stat"><b id="people">&ndash;</b><span>people</span></div>
-      <div class="stat"><b id="hours">&ndash;</b><span>hours</span></div>
-      <div class="stat"><b id="perPerson">&ndash;</b><span>avg / person</span></div>
-    </div>
-    <h2>Participants</h2>
-    <ul id="list"></ul>
-    <div class="error" id="error" hidden></div>
-    <details>
-      <summary>Settings</summary>
-      <div class="field">
-        <label for="includeOptional">Include optional participants</label>
-        <input id="includeOptional" type="checkbox" />
+    <div class="brand" role="img" aria-label="Danske Bank"><i></i><img src="../assets/danske-mark.svg" alt="" /></div>
+    <div class="card">
+      <div class="head">
+        <h1 class="title"><img src="../assets/calculator.svg" alt="" />Meeting cost calculator</h1>
+        <div class="total">
+          <div class="label">Total meeting cost</div>
+          <div class="amount" id="amount">&ndash;</div>
+        </div>
       </div>
-      <div class="actions">
-        <button type="button" id="save">Save</button>
-        <button type="button" id="reset">Reset</button>
+      <div class="stats">
+        <div class="stat"><span>Attendees</span><b id="people">&ndash;</b></div>
+        <div class="stat"><span>Duration</span><b id="hours">&ndash;</b></div>
       </div>
-      <div id="saveStatus"></div>
-    </details>
-    <div class="footer">
-      <button type="button" id="feedback">Feedback</button>
+      <div>
+        <ul id="list"></ul>
+        <div class="totals">
+          <span><span>Total</span> <span class="detail" id="totalDetail"></span></span>
+          <span id="totalValue">&ndash;</span>
+        </div>
+      </div>
+      <div class="error" id="error" hidden></div>
+      <details>
+        <summary>Settings</summary>
+        <div class="field">
+          <label for="includeOptional">Include optional participants</label>
+          <input id="includeOptional" type="checkbox" />
+        </div>
+        <div class="actions">
+          <button type="button" id="save">Save</button>
+          <button type="button" id="reset">Reset</button>
+        </div>
+        <div id="saveStatus"></div>
+      </details>
     </div>
-    <script src="taskpane.js?v=20261021-4"></script>
+    <div class="feedback">
+      <div>
+        <h3>Leave feedback</h3>
+        <p>Have an idea or spotted an issue? <button type="button" class="link" id="feedback">Let us know</button></p>
+      </div>
+      <i aria-hidden="true"></i>
+    </div>
+    <script src="taskpane.js?v=20261111-1"></script>
   </body>
 </html>

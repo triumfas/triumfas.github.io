@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="calculator">
+<g id="Vector">
+<path d="M19.5 3V21H4.5V3H19.5ZM19.5 1.5H4.5C4.10218 1.5 3.72064 1.65804 3.43934 1.93934C3.15804 2.22064 3 2.60218 3 3V21C3 21.3978 3.15804 21.7794 3.43934 22.0607C3.72064 22.342 4.10218 22.5 4.5 22.5H19.5C19.8978 22.5 20.2794 22.342 20.5607 22.0607C20.842 21.7794 21 21.3978 21 21V3C21 2.60218 20.842 2.22064 20.5607 1.93934C20.2794 1.65804 19.8978 1.5 19.5 1.5Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M8.25 17.25H6.75V18.75H8.25V17.25Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M17.25 17.25H15.75V18.75H17.25V17.25Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M8.25 13.5H6.75V15H8.25V13.5Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M17.25 13.5H15.75V15H17.25V13.5Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M8.25 9.75H6.75V11.25H8.25V9.75Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M12.75 17.25H11.25V18.75H12.75V17.25Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M12.75 13.5H11.25V15H12.75V13.5Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M12.75 9.75H11.25V11.25H12.75V9.75Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M17.25 9.75H15.75V11.25H17.25V9.75Z" fill="#0060E8" fill-opacity="0.995"/>
+<path d="M17.25 5.25H6.75V7.5H17.25V5.25Z" fill="#0060E8" fill-opacity="0.995"/>
+</g>
+</g>
+</svg>

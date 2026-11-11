@@ -86,23 +86,28 @@ async function render() {
     const hours = Math.max(0, (end.getTime() - start.getTime()) / 3600000);
     const hourlyTotal = [...people.values()].reduce((sum, p) => sum + p.rate, 0);
     const total = Math.round(hourlyTotal * hours);
-    const average = people.size ? Math.round(total / people.size) : 0;
     const hoursText = Math.round(hours * 100) / 100;
+    const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
     $("amount").textContent = `${CURRENCY} ${fmt(total)}`;
-    $("formula").textContent = `${people.size} people × ${hoursText} h · ${CURRENCY} ${hourlyTotal}/h combined`;
     $("people").textContent = people.size;
-    $("hours").textContent = hoursText;
-    $("perPerson").textContent = `${CURRENCY} ${fmt(average)}`;
+    $("hours").textContent = `${hoursText}h`;
+    $("totalDetail").textContent = `(${plural(people.size, "attendee")} x ${plural(hoursText, "hour")})`;
+    $("totalValue").textContent = `${CURRENCY} ${fmt(total)}`;
 
     const list = $("list");
     list.replaceChildren(
       ...[...people.values()].map((p) => {
         const li = document.createElement("li");
         const a = document.createElement("span");
+        a.className = "name";
         a.textContent = p.name;
         const b = document.createElement("span");
-        b.textContent = `${CURRENCY} ${fmt(Math.round(p.rate * hours))} (${p.rate}/h)`;
+        b.className = "rate";
+        b.append(`${CURRENCY} ${fmt(p.rate)}`);
+        const unit = document.createElement("small");
+        unit.textContent = "/hour";
+        b.append(unit);
         li.append(a, b);
         return li;
       })

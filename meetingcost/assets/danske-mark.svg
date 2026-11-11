@@ -1,0 +1,14 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="77" height="18" viewBox="0 0 77 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="progress bar">
+<g clip-path="url(#clip0_0_7)">
+<path id="Vector" d="M0 0.000390485V17.9963L77 18V0L0 0.000390485Z" fill="#002346"/>
+<path id="Vector_2" d="M76.262 17.268H47.5867V0.731947H76.262V17.268Z" fill="white"/>
+</g>
+<rect x="0.323529" y="0.323529" width="76.3529" height="17.3529" stroke="#002346" stroke-width="0.647059"/>
+</g>
+<defs>
+<clipPath id="clip0_0_7">
+<rect width="77" height="18" fill="white"/>
+</clipPath>
+</defs>
+</svg>
